@@ -2,39 +2,32 @@ const posts = [
   {
     id: "post:1",
     title: "Introduction to GraphQL!",
-    author: {
-      id: "user:1"
-    }
+    type: 'post',
+    related: ['article:1']
   },
   {
     id: "post:2",
     title: "GraphQL-Jit a fast engine for GraphQL",
-    author: {
-      id: "user:2"
-    }
+    type: 'post',
+    related: ['article:2']
   }
 ];
 
-const users = [
+const articles = [
   {
-    id: "user:1",
-    name: "Boopathi",
-    posts: [
-      {
-        id: "post:1"
-      }
-    ]
+    id: "article:1",
+    title: "article Introduction to GraphQL!",
+    type: 'article',
+
   },
   {
-    id: "user:2",
-    name: "Rui",
-    posts: [
-      {
-        id: "post:2"
-      }
-    ]
+    id: "article:2",
+    title: "article GraphQL-Jit a fast engine for GraphQL",
+    type: 'article',
+
   }
 ];
+
 
 function getPost(id: string) {
   const post = posts.find(post => post.id === id);
@@ -44,51 +37,35 @@ function getPost(id: string) {
   return post;
 }
 
-function getUser(id: string) {
-  const user = users.find(user => user.id === id);
-  if (user == null) {
-    throw new Error(`User "${id}" not found`);
+function getArticle(id: string) {
+  const article = articles.find(article => article.id === id);
+  if (article == null) {
+    throw new Error(`article "${id}" not found`);
   }
-  return user;
+  return article;
 }
 
 export default {
-  Query: {
-    post(_: any, { id }: { id: string }) {
-      return getPost(id);
-    },
-    user(_: any, { id }: { id: string }) {
-      return getUser(id);
-    },
-    node(_: any, { id }: { id: string }) {
-      switch (id.split(":")[0]) {
+  Content: {
+    __resolveType(content: any) {
+      switch (content.id.split(":")[0]) {
         case "post":
-          return { __typename: "Post", ...getPost(id) };
-        case "user":
-          return { __typename: "User", ...getUser(id) };
+          return  'Post';
+        case "article":
+          return 'Article'
       }
       throw new Error("Invalid id");
-    },
-    posts() {
-      return posts;
-    },
-    users() {
-      return users;
-    }
-  },
-  Node: {
-    __resolveType({ __typename }: { __typename: string }) {
-      return __typename;
     }
   },
   Post: {
-    author({ author }: { author: { id: string } }) {
-      return getUser(author.id);
+    related: (a:any,b:any, c:any)=>{
+      return articles.filter(e => a.related.includes(e.id))
     }
   },
-  User: {
-    posts({ posts }: { posts: { id: string }[] }) {
-      return posts.map(({ id }) => getPost(id));
-    }
+  Query: {
+    detailContent: () => {
+      return ([] as Array<any>).concat(posts, articles)
+    },
+
   }
 };
